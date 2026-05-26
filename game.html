@@ -751,7 +751,74 @@ if (frame) {
 
     const game = snap.val() || {};
     await awardGamePageLevel(gameId,2);
-    const launchUrl = game.sourceUrl || game.embedUrl || '';
+    const launchUrl = game.sourceUrl || game.mediaUrl || game.videoUrl || game.embedUrl || '';
+
+    function mediaOpenMode(item){
+      return item.openMode || game.openMode || 'embed';
+    }
+    function mediaSourceType(item){
+      return item.sourceType || item.mediaSourceType || game.mediaSourceType || (/(\.mp4|\.mkv|\.webm)(\?|$)/i.test(item.url||item.mediaUrl||'')?'video':'link');
+    }
+    function playMediaItem(item){
+      const url = item.url || item.mediaUrl || item.embedUrl || item.sourceUrl || '';
+      if(!url)return;
+      const mode = mediaOpenMode(item);
+      const sourceType = mediaSourceType(item);
+      if(mode === 'redirect'){
+        window.location.href = url;
+        return;
+      }
+      if(sourceType === 'video' || mode === 'player'){
+        if(frame) frame.style.display='none';
+        let player = document.getElementById('mediaPlayer');
+        if(!player){
+          player = document.createElement('video');
+          player.id='mediaPlayer';
+          player.controls=true;
+          player.playsInline=true;
+          player.style.width='100%';
+          player.style.minHeight='420px';
+          player.style.border='0';
+          player.style.borderRadius='18px';
+          frame.parentElement.appendChild(player);
+        }
+        player.style.display='block';
+        player.src=url;
+        player.title=item.title||game.title||'media';
+        player.load();
+        return;
+      }
+      const player=document.getElementById('mediaPlayer');
+      if(player)player.style.display='none';
+      frame.style.display='block';
+      frame.src=url;
+      frame.title=item.title||game.title||'media';
+    }
+    function renderTvEpisodes(){
+      if(game.type!=='tv')return false;
+      const seasons = Array.isArray(game.seasons) ? game.seasons : [];
+      const wrap = document.createElement('section');
+      wrap.className='card card-pad media-library-panel';
+      wrap.innerHTML=`<h2>Seasons & Episodes</h2><p class="muted">Pick an episode to play it here.</p>${seasons.map((s,si)=>`
+        <details ${si===0?'open':''}>
+          <summary class="btn">Season ${escapeHtml(s.season||si+1)}</summary>
+          <div class="media-episode-grid">
+            ${(s.episodes||[]).map((ep,ei)=>`<button class="btn media-episode-btn" type="button" data-season="${si}" data-episode="${ei}">${escapeHtml(ep.title||('Episode '+(ei+1)))}</button>`).join('')||'<p class="muted">No episodes.</p>'}
+          </div>
+        </details>`).join('')||'<p class="muted">No seasons added yet.</p>'}`;
+      const host = document.querySelector('main') || document.body;
+      host.appendChild(wrap);
+      wrap.addEventListener('click',e=>{
+        const b=e.target.closest('[data-season][data-episode]');
+        if(!b)return;
+        const ep=(seasons[Number(b.dataset.season)]?.episodes||[])[Number(b.dataset.episode)];
+        if(ep)playMediaItem(ep);
+      });
+      const first=(seasons[0]?.episodes||[])[0];
+      if(first)playMediaItem(first);
+      return true;
+    }
+
 
     if (game.locked) {
       window.location.href = 'construction.html';
@@ -770,7 +837,7 @@ if (frame) {
     if (statValues[1]) statValues[1].textContent = game.statusText || 'live';
     if (statValues[2]) statValues[2].textContent = game.addedText || 'new';
     if (statValues[3]) statValues[3].textContent = game.credits || 'original creators';
-    setText(viewerTitle, game.type === 'app' ? 'App' : 'Game');
+    setText(viewerTitle, game.type === 'movie' ? 'Movie' : (game.type === 'tv' ? 'TV Show' : (game.type === 'app' ? 'App' : 'Game')));
     if (viewerMeta) viewerMeta.innerHTML = '<span class="status-dot"></span>' + escapeHtml(game.statusText || 'live');
     setText(gameTag, game.tag || game.type || 'game');
     setText(gameTitle, game.title || 'untitled');
@@ -778,9 +845,15 @@ if (frame) {
     if (detailValues[1]) detailValues[1].textContent = game.credits || 'original creators';
     setText(creditLine, game.description || 'have fun and be safe!');
 
-    frame.src = game.embedUrl || launchUrl;
-    frame.title = game.title || 'fun and games item';
-if (openGameBtn) {
+    if(game.type === 'tv'){
+      renderTvEpisodes();
+    }else if(game.type === 'movie'){
+      playMediaItem({title:game.title,url:game.mediaUrl||game.videoUrl||launchUrl,openMode:game.openMode,sourceType:game.mediaSourceType});
+    }else{
+      frame.src = game.embedUrl || launchUrl;
+      frame.title = game.title || 'fun and games item';
+    }
+    if (openGameBtn) {
       openGameBtn.addEventListener('click', () => {
         window.open(launchUrl || frame.src, '_blank', 'noopener,noreferrer');
       });

@@ -271,14 +271,26 @@
             <div class="field"><label>Source URL</label><input id="gameSourceUrl"></div>
             <div class="field"><label>Thumbnail URL</label><input id="gameThumb"></div>
             <div class="field"><label>Tag</label><input id="gameTag" placeholder="game"></div>
-            <div class="field"><label>Type</label><select id="gameType" class="search"><option value="game">game</option><option value="app">app</option></select></div>
-            <div class="field"><label>Open Mode</label><select id="gameOpenMode" class="search"><option value="embed">embed in game.html</option><option value="redirect">redirect directly</option></select></div>
+            <div class="field"><label>Type</label><select id="gameType" class="search"><option value="game">game</option><option value="app">app</option><option value="movie">movie</option><option value="tv">tv show</option></select></div>
+            <div class="field"><label>Open Mode</label><select id="gameOpenMode" class="search"><option value="embed">iframe/embed in site</option><option value="player">built-in video player</option><option value="redirect">redirect directly</option></select></div>
+            <div class="field"><label>Media URL / File URL</label><input id="mediaUrl" placeholder="movie mp4/mkv/link or default show URL"></div>
+            <div class="field"><label>Media Source Type</label><select id="mediaSourceType" class="search"><option value="link">link / iframe</option><option value="video">mp4/mkv video url</option></select></div>
             <div class="field"><label>Locked?</label><select id="gameLocked" class="search"><option value="false">unlocked</option><option value="true">locked</option></select></div>
             <div class="field"><label>Hidden?</label><select id="gameHidden" class="search"><option value="false">visible</option><option value="true">hidden</option></select></div>
             <div class="field"><label>Page</label><input id="gamePage" type="number" min="1" value="1"></div>
             <div class="field"><label>Order</label><input id="gameOrder" type="number" min="1" value="1"></div>
           </div>
           <div class="field"><label>Description</label><textarea id="gameDesc"></textarea></div>
+          <div class="field"><label>TV Seasons / Episodes JSON</label><textarea id="mediaEpisodes" placeholder='Example:
+[
+  {
+    "season": 1,
+    "episodes": [
+      {"title":"Episode 1","url":"https://example.com/ep1.mp4","openMode":"player","sourceType":"video"},
+      {"title":"Episode 2","url":"https://example.com/ep2","openMode":"embed","sourceType":"link"}
+    ]
+  }
+]'></textarea><p class="muted">Only use links or files you have permission to show. MP4 works best. MKV depends on browser support.</p></div>
           <div class="button-row">
             <button class="btn primary" id="saveGame" type="button">Save Game</button>
             <button class="btn" id="newGame" type="button">New Blank</button>
@@ -1071,6 +1083,9 @@ function fillGameForm(g={}){
   if(window.gameTag) gameTag.value=g.tag||g.type||'game';
   if(window.gameType) gameType.value=g.type||'game';
   if(window.gameOpenMode) gameOpenMode.value=g.openMode||'embed';
+  if(window.mediaUrl) mediaUrl.value=g.mediaUrl||g.videoUrl||g.embedUrl||'';
+  if(window.mediaSourceType) mediaSourceType.value=g.mediaSourceType||g.sourceType||((g.mediaUrl||g.videoUrl||'').match(/\.(mp4|mkv|webm)(\?|$)/i)?'video':'link');
+  if(window.mediaEpisodes) mediaEpisodes.value=JSON.stringify(g.seasons||[],null,2);
   if(window.gameLocked) gameLocked.value=String(!!g.locked);
   if(window.gameHidden) gameHidden.value=String(!!g.hidden);
   if(window.gamePage) gamePage.value=Number(g.page||1);
@@ -1089,6 +1104,9 @@ function currentGamePayload(){
     tag:(window.gameTag?.value||'game').trim()||'game',
     type:window.gameType?.value||'game',
     openMode:window.gameOpenMode?.value||'embed',
+    mediaUrl:(window.mediaUrl?.value||'').trim(),
+    mediaSourceType:window.mediaSourceType?.value||'link',
+    seasons:(()=>{try{return JSON.parse(window.mediaEpisodes?.value||'[]')}catch(e){alert('TV Seasons / Episodes JSON is invalid.');throw e}})(),
     locked:boolVal(window.gameLocked?.value||false),
     hidden:boolVal(window.gameHidden?.value||false),
     page:Number(window.gamePage?.value||1),
@@ -1101,13 +1119,14 @@ function renderGamesAdmin(){
   if(!window.gameSelect||!window.gamesAdminList)return;
   const arr=Object.values(gamesAdmin||{}).filter(g=>g&&g.id).sort((a,b)=>(Number(a.page||1)-Number(b.page||1))||(Number(a.order||0)-Number(b.order||0))||String(a.title||a.id).localeCompare(String(b.title||b.id)));
   gameSelect.innerHTML='<option value="">New game...</option>'+arr.map(g=>`<option value="${esc(g.id)}">${esc(g.title||g.id)} ${g.locked?'🔒':''} ${g.hidden?'🙈':''}</option>`).join('');
-  gamesAdminList.innerHTML=arr.map(g=>`<button class="person" data-game="${esc(g.id)}" type="button" style="width:100%;text-align:left;color:white"><span class="avatar">${g.locked?'🔒':'🎮'}</span><span><b>${esc(g.title||g.id)}</b><span>${esc(g.id)} · ${g.locked?'locked':'unlocked'} · ${g.hidden?'hidden':'visible'}</span></span></button>`).join('')||'<p class="muted">No games found.</p>';
+  gamesAdminList.innerHTML=arr.map(g=>`<button class="person" data-game="${esc(g.id)}" type="button" style="width:100%;text-align:left;color:white"><span class="avatar">${g.locked?'🔒':(g.type==='movie'?'🎬':(g.type==='tv'?'📺':'🎮'))}</span><span><b>${esc(g.title||g.id)}</b><span>${esc(g.id)} · ${g.locked?'locked':'unlocked'} · ${g.hidden?'hidden':'visible'}</span></span></button>`).join('')||'<p class="muted">No games found.</p>';
   if(window.gameStatus)gameStatus.textContent=arr.length+' games loaded';
 }
 async function saveGameRecord(){
   if(!canGame())return alert('Only owner/tester/cruz can save games.');
   const g=currentGamePayload();
-  if(!g.id||!g.title||!g.embedUrl)return alert('ID, title, and URL required.');
+  if(!g.id||!g.title)return alert('ID and title required.');
+  if(!g.embedUrl&&!g.mediaUrl&&!(g.seasons||[]).length)return alert('Add an Embed/Launch URL, Media URL, or TV episodes.');
   await db.ref('homepageAdmin/games/'+g.id).update(g);
   gameId.value=g.id;
   alert('Game saved.');

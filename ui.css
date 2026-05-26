@@ -634,3 +634,11 @@ input,textarea,select,button{font-size:16px}
   font-size:.78rem;
 }
 .verified-pill::before{content:"✓";font-weight:950}
+
+
+/* media library additions */
+.media-library-panel{margin-top:18px}
+.media-library-panel details{margin:10px 0;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:16px;background:rgba(255,255,255,.035)}
+.media-library-panel summary{cursor:pointer;width:max-content}
+.media-episode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:10px}
+#mediaPlayer{background:#000;display:block}
