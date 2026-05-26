@@ -54,6 +54,7 @@
     <a href="admin.html?id=scheduler" class="admin-tab">⏰ Scheduler</a>
     <a href="admin.html?id=health" class="admin-tab">🩺 Health</a>
     <a href="admin.html?id=games" class="admin-tab">🎮 Games</a>
+    <a href="admin.html?id=media" class="admin-tab">🎬 Movies / TV</a>
     <a href="admin.html?id=chat" class="admin-tab">💬 Chat</a>
     <a href="admin.html?id=announcements" class="admin-tab">📢 News / Announcements</a>
     <a href="admin.html?id=logs" class="admin-tab">📜 Logs</a>
@@ -271,26 +272,14 @@
             <div class="field"><label>Source URL</label><input id="gameSourceUrl"></div>
             <div class="field"><label>Thumbnail URL</label><input id="gameThumb"></div>
             <div class="field"><label>Tag</label><input id="gameTag" placeholder="game"></div>
-            <div class="field"><label>Type</label><select id="gameType" class="search"><option value="game">game</option><option value="app">app</option><option value="movie">movie</option><option value="tv">tv show</option></select></div>
-            <div class="field"><label>Open Mode</label><select id="gameOpenMode" class="search"><option value="embed">iframe/embed in site</option><option value="player">built-in video player</option><option value="redirect">redirect directly</option></select></div>
-            <div class="field"><label>Media URL / File URL</label><input id="mediaUrl" placeholder="movie mp4/mkv/link or default show URL"></div>
-            <div class="field"><label>Media Source Type</label><select id="mediaSourceType" class="search"><option value="link">link / iframe</option><option value="video">mp4/mkv video url</option></select></div>
+            <div class="field"><label>Type</label><select id="gameType" class="search"><option value="game">game</option><option value="app">app</option></select></div>
+            <div class="field"><label>Open Mode</label><select id="gameOpenMode" class="search"><option value="embed">embed in game.html</option><option value="redirect">redirect directly</option></select></div>
             <div class="field"><label>Locked?</label><select id="gameLocked" class="search"><option value="false">unlocked</option><option value="true">locked</option></select></div>
             <div class="field"><label>Hidden?</label><select id="gameHidden" class="search"><option value="false">visible</option><option value="true">hidden</option></select></div>
             <div class="field"><label>Page</label><input id="gamePage" type="number" min="1" value="1"></div>
             <div class="field"><label>Order</label><input id="gameOrder" type="number" min="1" value="1"></div>
           </div>
           <div class="field"><label>Description</label><textarea id="gameDesc"></textarea></div>
-          <div class="field"><label>TV Seasons / Episodes JSON</label><textarea id="mediaEpisodes" placeholder='Example:
-[
-  {
-    "season": 1,
-    "episodes": [
-      {"title":"Episode 1","url":"https://example.com/ep1.mp4","openMode":"player","sourceType":"video"},
-      {"title":"Episode 2","url":"https://example.com/ep2","openMode":"embed","sourceType":"link"}
-    ]
-  }
-]'></textarea><p class="muted">Only use links or files you have permission to show. MP4 works best. MKV depends on browser support.</p></div>
           <div class="button-row">
             <button class="btn primary" id="saveGame" type="button">Save Game</button>
             <button class="btn" id="newGame" type="button">New Blank</button>
@@ -303,6 +292,44 @@
         </div>
       </div>
     </section>
+
+
+    <section id="mediaPanel" class="admin-section">
+      <div class="card card-pad" id="mediaAdminPanel">
+        <div class="section-head">
+          <div><h2>Movies / TV Shows</h2><p class="muted">Separate from games. TV shows use seasons and episodes, movies use one link.</p></div>
+          <a class="btn" href="tv.html">Open Movies & TV page</a>
+        </div>
+        <div id="mediaEditor" class="media-admin-builder">
+          <div class="field"><label>Pick Existing Media</label><select id="mediaSelect" class="search"><option value="">New media...</option></select></div>
+          <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px">
+            <div class="field"><label>Media ID</label><input id="mediaId" placeholder="young-sheldon"></div>
+            <div class="field"><label>Title</label><input id="mediaTitleInput" placeholder="Young Sheldon"></div>
+            <div class="field"><label>Type</label><select id="mediaType" class="search"><option value="movie">Movie</option><option value="tv">TV Show</option></select></div>
+            <div class="field"><label>Open Mode</label><select id="mediaOpenMode" class="search"><option value="embed">iframe player</option><option value="redirect">open externally</option></select></div>
+            <div class="field"><label>Poster / Thumbnail URL</label><input id="mediaThumb" placeholder="https://..."></div>
+            <div class="field"><label>Movie Link</label><input id="mediaUrl" placeholder="Only for movies"></div>
+            <div class="field"><label>Tag</label><input id="mediaTag" placeholder="sitcom / movie / show"></div>
+            <div class="field"><label>Hidden?</label><select id="mediaHidden" class="search"><option value="false">visible</option><option value="true">hidden</option></select></div>
+            <div class="field"><label>Order</label><input id="mediaOrder" type="number" min="1" value="1"></div>
+          </div>
+          <div class="field"><label>Description</label><textarea id="mediaDescInput" placeholder="Short description"></textarea></div>
+          <div id="tvBuilder" class="media-admin-builder">
+            <div class="section-head"><div><h3>TV Seasons & Episodes</h3><p class="muted">Use buttons. Add as many seasons and episodes as you need.</p></div><button class="btn" id="addSeasonBtn" type="button">+ Add Season</button></div>
+            <div id="seasonBuilderList"></div>
+          </div>
+          <details class="media-admin-builder">
+            <summary class="btn">Advanced: paste/edit seasons JSON</summary>
+            <textarea id="mediaSeasonsJson" placeholder='[{"season":1,"title":"Season 1","episodes":[{"episode":1,"title":"Episode 1","url":"https://example.com"}]}]'></textarea>
+            <div class="button-row"><button class="btn" id="loadSeasonsJsonBtn" type="button">Load JSON into Builder</button><button class="btn" id="formatSeasonsJsonBtn" type="button">Format JSON</button></div>
+          </details>
+          <div class="button-row"><button class="btn primary" id="saveMediaBtn" type="button">Save Movie / TV Show</button><button class="btn" id="newMediaBtn" type="button">New Blank</button><button class="btn danger" id="deleteMediaBtn" type="button">Delete</button></div>
+          <p class="muted" id="mediaStatus">loading media...</p>
+          <div class="list" id="mediaAdminList"><p class="muted">loading...</p></div>
+        </div>
+      </div>
+    </section>
+
 
     <section id="chatPanel" class="admin-section">
       <section class="card card-pad"><h2>Chat Moderation</h2><div class="list">
@@ -831,7 +858,7 @@ function renderAdminLogsNow(){
 }
 function renderAdminOverviewNow(){renderDashboardNow();renderReportsNow();renderAdminLogsNow();if(typeof renderAnalyticsNow==='function')renderAnalyticsNow();}
 
-document.addEventListener('fg-auth-ready',async()=>{me=window.FGUser;if(!isCruzUser(me)&&power(me.role)<3){document.body.innerHTML='<main style="padding:30px"><h1>Access denied</h1><p>You need admin rank or higher.</p></main>';return}adminRank.textContent=me.role;await FGAuth.initFirebase();db=FGAuth.db();gameEditor.style.display=canGame()?'block':'none';gamePermText.textContent=canGame()?'You can add/edit games.':'Admins can moderate accounts, but only owner/tester can add games.';db.ref('siteUsers').on('value',s=>{users=s.val()||{};renderUsers();renderAllFeaturePanels();renderDashboardNow()});db.ref('sitePresence').on('value',s=>{presence=s.val()||{};renderUsers();renderAnalyticsNow();renderHealth();renderDashboardNow()});db.ref('siteCustomCommands').on('value',s=>{customCommands=s.val()||{};renderCustomCommands()});db.ref('homepageAdmin/games').on('value',s=>{gamesAdmin=s.val()||{};window.gamesAdmin=gamesAdmin;renderGamesAdmin();renderAnalyticsNow();renderDashboardNow()});db.ref('homepageAdmin/gameStats').on('value',s=>{window.gameStats=s.val()||{};renderAnalyticsNow()});db.ref('fun-and-games-chat/messages').limitToLast(500).on('value',s=>{window.__chatAnalyticsCount=s.numChildren?s.numChildren():0;renderAnalyticsNow()});db.ref('siteReports').on('value',s=>{siteReports=s.val()||{};renderAllFeaturePanels();renderReportsNow();renderDashboardNow()});const loadLogPath=(path,key=path)=>{
+document.addEventListener('fg-auth-ready',async()=>{me=window.FGUser;if(!isCruzUser(me)&&power(me.role)<3){document.body.innerHTML='<main style="padding:30px"><h1>Access denied</h1><p>You need admin rank or higher.</p></main>';return}adminRank.textContent=me.role;await FGAuth.initFirebase();db=FGAuth.db();gameEditor.style.display=canGame()?'block':'none';gamePermText.textContent=canGame()?'You can add/edit games.':'Admins can moderate accounts, but only owner/tester can add games.';bindMediaAdmin();db.ref('siteUsers').on('value',s=>{users=s.val()||{};renderUsers();renderAllFeaturePanels();renderDashboardNow()});db.ref('sitePresence').on('value',s=>{presence=s.val()||{};renderUsers();renderAnalyticsNow();renderHealth();renderDashboardNow()});db.ref('siteCustomCommands').on('value',s=>{customCommands=s.val()||{};renderCustomCommands()});db.ref('homepageAdmin/games').on('value',s=>{gamesAdmin=s.val()||{};window.gamesAdmin=gamesAdmin;renderGamesAdmin();renderAnalyticsNow();renderDashboardNow()});db.ref('homepageAdmin/media').on('value',s=>{mediaAdmin=s.val()||{};window.mediaAdmin=mediaAdmin;renderMediaAdmin();});db.ref('homepageAdmin/gameStats').on('value',s=>{window.gameStats=s.val()||{};renderAnalyticsNow()});db.ref('fun-and-games-chat/messages').limitToLast(500).on('value',s=>{window.__chatAnalyticsCount=s.numChildren?s.numChildren():0;renderAnalyticsNow()});db.ref('siteReports').on('value',s=>{siteReports=s.val()||{};renderAllFeaturePanels();renderReportsNow();renderDashboardNow()});const loadLogPath=(path,key=path)=>{
   try{
     db.ref(path).limitToLast?db.ref(path).limitToLast(1000).on('value',s=>{
       const obj={};
@@ -1070,6 +1097,23 @@ async function deleteCommand(){
 }
 
 sendAnnounce.onclick=async()=>{const text=announceText.value.trim();if(!text)return;const id='ann-'+Date.now();await db.ref('siteAnnouncements/current').set({id,title:'Announcement',text,createdAt:Date.now(),from:me.uid});setTimeout(()=>db.ref('siteAnnouncements/current').once('value').then(s=>{const v=s.val();if(v&&v.id===id)db.ref('siteAnnouncements/current').remove()}),6000);announceText.value=''};
+
+let mediaAdmin={};
+let mediaDraftSeasons=[];
+function cleanMediaId(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60)}
+function mediaBool(v){return String(v)==='true'}
+function normalizeSeasons(seasons){return (Array.isArray(seasons)?seasons:[]).map((s,si)=>({season:Number(s.season||si+1),title:String(s.title||('Season '+Number(s.season||si+1))),episodes:(Array.isArray(s.episodes)?s.episodes:[]).map((e,ei)=>({episode:Number(e.episode||ei+1),title:String(e.title||('Episode '+Number(e.episode||ei+1))),url:String(e.url||e.embedUrl||e.sourceUrl||''),description:String(e.description||'')}))}))}
+function syncSeasonsJson(){if(window.mediaSeasonsJson)mediaSeasonsJson.value=JSON.stringify(mediaDraftSeasons,null,2)}
+function renderSeasonBuilder(){if(!window.seasonBuilderList)return;seasonBuilderList.innerHTML=mediaDraftSeasons.map((season,si)=>`<div class="season-admin-card" data-season-index="${si}"><div class="grid" style="grid-template-columns:100px 1fr auto;gap:8px"><div class="field"><label>Season #</label><input data-season-field="season" data-season-index="${si}" type="number" value="${Number(season.season||si+1)}"></div><div class="field"><label>Season Title</label><input data-season-field="title" data-season-index="${si}" value="${esc(season.title||('Season '+(si+1)))}"></div><div class="field"><label>&nbsp;</label><button class="btn danger" data-remove-season="${si}" type="button">Remove Season</button></div></div><div class="episode-list">${(season.episodes||[]).map((ep,ei)=>`<div class="episode-admin-card" data-episode-index="${ei}"><div class="media-form-small-grid"><div class="field"><label>Ep #</label><input data-episode-field="episode" data-season-index="${si}" data-episode-index="${ei}" type="number" value="${Number(ep.episode||ei+1)}"></div><div class="field"><label>Episode Title</label><input data-episode-field="title" data-season-index="${si}" data-episode-index="${ei}" value="${esc(ep.title||'')}"></div><div class="field"><label>Episode Link</label><input data-episode-field="url" data-season-index="${si}" data-episode-index="${ei}" value="${esc(ep.url||'')}" placeholder="https://..."></div><button class="btn danger" data-remove-episode="${si}:${ei}" type="button">Remove</button></div><div class="field"><label>Description optional</label><input data-episode-field="description" data-season-index="${si}" data-episode-index="${ei}" value="${esc(ep.description||'')}" placeholder="Optional episode description"></div></div>`).join('')||'<p class="muted">No episodes yet. Add one below.</p>'}</div><button class="btn" data-add-episode="${si}" type="button">+ Add Episode</button></div>`).join('')||'<p class="muted">No seasons yet. Click “Add Season”.</p>';syncSeasonsJson()}
+function toggleMediaBuilder(){if(!window.tvBuilder)return;tvBuilder.style.display=mediaType.value==='tv'?'block':'none';if(window.mediaUrl)mediaUrl.closest('.field').style.display=mediaType.value==='movie'?'block':'none'}
+function fillMediaForm(m={}){if(!window.mediaId)return;mediaId.value=m.id||'';mediaTitleInput.value=m.title||'';mediaType.value=m.contentType||m.type||'movie';mediaOpenMode.value=m.openMode||'embed';mediaThumb.value=m.thumbnailUrl||m.posterUrl||m.thumb||'';mediaUrl.value=m.url||m.embedUrl||m.sourceUrl||'';mediaTag.value=m.tag||'';mediaHidden.value=String(!!m.hidden);mediaOrder.value=Number(m.order||1);mediaDescInput.value=m.description||'';mediaDraftSeasons=normalizeSeasons(m.seasons||[]);if(mediaType.value==='tv'&&!mediaDraftSeasons.length)mediaDraftSeasons=[{season:1,title:'Season 1',episodes:[{episode:1,title:'Episode 1',url:'',description:''}]}];renderSeasonBuilder();if(window.mediaStatus)mediaStatus.textContent=m.id?'Editing '+m.id:'New media';toggleMediaBuilder()}
+function currentMediaPayload(){const id=cleanMediaId(mediaId.value||mediaTitleInput.value);const type=mediaType.value||'movie';const payload={id,title:mediaTitleInput.value.trim(),description:mediaDescInput.value.trim(),contentType:type,type,thumbnailUrl:mediaThumb.value.trim(),posterUrl:mediaThumb.value.trim(),tag:mediaTag.value.trim()||type,openMode:mediaOpenMode.value||'embed',hidden:mediaBool(mediaHidden.value),order:Number(mediaOrder.value||1),updatedAt:Date.now(),updatedBy:me?.uid||''};if(type==='movie'){payload.url=mediaUrl.value.trim();payload.embedUrl=mediaUrl.value.trim();payload.sourceUrl=mediaUrl.value.trim();payload.seasons=[]}else{payload.seasons=normalizeSeasons(mediaDraftSeasons)}return payload}
+function renderMediaAdmin(){if(!window.mediaSelect||!window.mediaAdminList)return;const arr=Object.values(mediaAdmin||{}).filter(m=>m&&m.id).sort((a,b)=>(Number(a.order||0)-Number(b.order||0))||String(a.title||a.id).localeCompare(String(b.title||b.id)));mediaSelect.innerHTML='<option value="">New media...</option>'+arr.map(m=>`<option value="${esc(m.id)}">${(m.contentType||m.type)==='tv'?'📺':'🎬'} ${esc(m.title||m.id)} ${m.hidden?'🙈':''}</option>`).join('');mediaAdminList.innerHTML=arr.map(m=>`<button class="person" data-media="${esc(m.id)}" type="button" style="width:100%;text-align:left;color:white"><span class="avatar">${(m.contentType||m.type)==='tv'?'📺':'🎬'}</span><span><b>${esc(m.title||m.id)}</b><span>${esc(m.id)} · ${esc(m.contentType||m.type||'movie')} · ${m.hidden?'hidden':'visible'}</span></span></button>`).join('')||'<p class="muted">No movies or TV shows yet.</p>';if(window.mediaStatus)mediaStatus.textContent=arr.length+' media items loaded'}
+async function saveMediaRecord(){if(!canGame())return alert('Only owner/tester/cruz can save media.');const m=currentMediaPayload();if(!m.id||!m.title)return alert('ID and title required.');if(m.contentType==='movie'&&!m.url)return alert('Movie link required.');if(m.contentType==='tv'&&(!m.seasons.length||!m.seasons.some(s=>(s.episodes||[]).length)))return alert('Add at least one season and one episode.');await db.ref('homepageAdmin/media/'+m.id).update(m);mediaId.value=m.id;alert('Media saved.')}
+async function deleteMediaRecord(){if(!canGame())return alert('Only owner/tester/cruz can delete media.');const id=cleanMediaId(mediaId.value);if(!id)return alert('Pick media first.');if(!confirm('Delete '+id+'?'))return;await db.ref('homepageAdmin/media/'+id).remove();fillMediaForm({})}
+function bindMediaAdmin(){if(window.mediaType&&!mediaType.dataset.bound){mediaType.dataset.bound='1';mediaType.onchange=()=>{if(mediaType.value==='tv'&&!mediaDraftSeasons.length)mediaDraftSeasons=[{season:1,title:'Season 1',episodes:[{episode:1,title:'Episode 1',url:'',description:''}]}];toggleMediaBuilder();renderSeasonBuilder()}}if(window.addSeasonBtn&&!addSeasonBtn.dataset.bound){addSeasonBtn.dataset.bound='1';addSeasonBtn.onclick=()=>{mediaDraftSeasons.push({season:mediaDraftSeasons.length+1,title:'Season '+(mediaDraftSeasons.length+1),episodes:[{episode:1,title:'Episode 1',url:'',description:''}]});renderSeasonBuilder()}}if(window.seasonBuilderList&&!seasonBuilderList.dataset.bound){seasonBuilderList.dataset.bound='1';seasonBuilderList.addEventListener('input',e=>{const sf=e.target.getAttribute('data-season-field'),ef=e.target.getAttribute('data-episode-field');if(sf){const si=Number(e.target.dataset.seasonIndex);mediaDraftSeasons[si][sf]=sf==='season'?Number(e.target.value||si+1):e.target.value}if(ef){const si=Number(e.target.dataset.seasonIndex),ei=Number(e.target.dataset.episodeIndex);mediaDraftSeasons[si].episodes[ei][ef]=ef==='episode'?Number(e.target.value||ei+1):e.target.value}syncSeasonsJson()});seasonBuilderList.addEventListener('click',e=>{const add=e.target.closest('[data-add-episode]'),remEp=e.target.closest('[data-remove-episode]'),remSeason=e.target.closest('[data-remove-season]');if(add){const si=Number(add.dataset.addEpisode);const eps=mediaDraftSeasons[si].episodes||(mediaDraftSeasons[si].episodes=[]);eps.push({episode:eps.length+1,title:'Episode '+(eps.length+1),url:'',description:''});renderSeasonBuilder()}if(remEp){const [si,ei]=remEp.dataset.removeEpisode.split(':').map(Number);mediaDraftSeasons[si].episodes.splice(ei,1);renderSeasonBuilder()}if(remSeason){mediaDraftSeasons.splice(Number(remSeason.dataset.removeSeason),1);renderSeasonBuilder()}})}if(window.loadSeasonsJsonBtn&&!loadSeasonsJsonBtn.dataset.bound){loadSeasonsJsonBtn.dataset.bound='1';loadSeasonsJsonBtn.onclick=()=>{try{mediaDraftSeasons=normalizeSeasons(JSON.parse(mediaSeasonsJson.value||'[]'));renderSeasonBuilder()}catch(e){alert('Invalid JSON: '+e.message)}}}if(window.formatSeasonsJsonBtn&&!formatSeasonsJsonBtn.dataset.bound){formatSeasonsJsonBtn.dataset.bound='1';formatSeasonsJsonBtn.onclick=()=>syncSeasonsJson()}if(window.saveMediaBtn&&!saveMediaBtn.dataset.bound){saveMediaBtn.dataset.bound='1';saveMediaBtn.onclick=saveMediaRecord}if(window.newMediaBtn&&!newMediaBtn.dataset.bound){newMediaBtn.dataset.bound='1';newMediaBtn.onclick=()=>fillMediaForm({})}if(window.deleteMediaBtn&&!deleteMediaBtn.dataset.bound){deleteMediaBtn.dataset.bound='1';deleteMediaBtn.onclick=deleteMediaRecord}if(window.mediaSelect&&!mediaSelect.dataset.bound){mediaSelect.dataset.bound='1';mediaSelect.onchange=()=>fillMediaForm(mediaAdmin[mediaSelect.value]||{})}if(window.mediaAdminList&&!mediaAdminList.dataset.bound){mediaAdminList.dataset.bound='1';mediaAdminList.addEventListener('click',e=>{const b=e.target.closest('[data-media]');if(!b)return;mediaSelect.value=b.dataset.media;fillMediaForm(mediaAdmin[b.dataset.media]||{})})}}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{try{bindMediaAdmin();toggleMediaBuilder();renderSeasonBuilder()}catch(e){console.warn('media admin bind failed',e)}},300));
+
 let gamesAdmin={};
 function cleanGameId(s){return String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)}
 function boolVal(v){return String(v)==='true'}
@@ -1083,9 +1127,6 @@ function fillGameForm(g={}){
   if(window.gameTag) gameTag.value=g.tag||g.type||'game';
   if(window.gameType) gameType.value=g.type||'game';
   if(window.gameOpenMode) gameOpenMode.value=g.openMode||'embed';
-  if(window.mediaUrl) mediaUrl.value=g.mediaUrl||g.videoUrl||g.embedUrl||'';
-  if(window.mediaSourceType) mediaSourceType.value=g.mediaSourceType||g.sourceType||((g.mediaUrl||g.videoUrl||'').match(/\.(mp4|mkv|webm)(\?|$)/i)?'video':'link');
-  if(window.mediaEpisodes) mediaEpisodes.value=JSON.stringify(g.seasons||[],null,2);
   if(window.gameLocked) gameLocked.value=String(!!g.locked);
   if(window.gameHidden) gameHidden.value=String(!!g.hidden);
   if(window.gamePage) gamePage.value=Number(g.page||1);
@@ -1104,9 +1145,6 @@ function currentGamePayload(){
     tag:(window.gameTag?.value||'game').trim()||'game',
     type:window.gameType?.value||'game',
     openMode:window.gameOpenMode?.value||'embed',
-    mediaUrl:(window.mediaUrl?.value||'').trim(),
-    mediaSourceType:window.mediaSourceType?.value||'link',
-    seasons:(()=>{try{return JSON.parse(window.mediaEpisodes?.value||'[]')}catch(e){alert('TV Seasons / Episodes JSON is invalid.');throw e}})(),
     locked:boolVal(window.gameLocked?.value||false),
     hidden:boolVal(window.gameHidden?.value||false),
     page:Number(window.gamePage?.value||1),
@@ -1119,14 +1157,13 @@ function renderGamesAdmin(){
   if(!window.gameSelect||!window.gamesAdminList)return;
   const arr=Object.values(gamesAdmin||{}).filter(g=>g&&g.id).sort((a,b)=>(Number(a.page||1)-Number(b.page||1))||(Number(a.order||0)-Number(b.order||0))||String(a.title||a.id).localeCompare(String(b.title||b.id)));
   gameSelect.innerHTML='<option value="">New game...</option>'+arr.map(g=>`<option value="${esc(g.id)}">${esc(g.title||g.id)} ${g.locked?'🔒':''} ${g.hidden?'🙈':''}</option>`).join('');
-  gamesAdminList.innerHTML=arr.map(g=>`<button class="person" data-game="${esc(g.id)}" type="button" style="width:100%;text-align:left;color:white"><span class="avatar">${g.locked?'🔒':(g.type==='movie'?'🎬':(g.type==='tv'?'📺':'🎮'))}</span><span><b>${esc(g.title||g.id)}</b><span>${esc(g.id)} · ${g.locked?'locked':'unlocked'} · ${g.hidden?'hidden':'visible'}</span></span></button>`).join('')||'<p class="muted">No games found.</p>';
+  gamesAdminList.innerHTML=arr.map(g=>`<button class="person" data-game="${esc(g.id)}" type="button" style="width:100%;text-align:left;color:white"><span class="avatar">${g.locked?'🔒':'🎮'}</span><span><b>${esc(g.title||g.id)}</b><span>${esc(g.id)} · ${g.locked?'locked':'unlocked'} · ${g.hidden?'hidden':'visible'}</span></span></button>`).join('')||'<p class="muted">No games found.</p>';
   if(window.gameStatus)gameStatus.textContent=arr.length+' games loaded';
 }
 async function saveGameRecord(){
   if(!canGame())return alert('Only owner/tester/cruz can save games.');
   const g=currentGamePayload();
-  if(!g.id||!g.title)return alert('ID and title required.');
-  if(!g.embedUrl&&!g.mediaUrl&&!(g.seasons||[]).length)return alert('Add an Embed/Launch URL, Media URL, or TV episodes.');
+  if(!g.id||!g.title||!g.embedUrl)return alert('ID, title, and URL required.');
   await db.ref('homepageAdmin/games/'+g.id).update(g);
   gameId.value=g.id;
   alert('Game saved.');
@@ -1166,7 +1203,7 @@ document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{try{renderAutoB
 
 <script>
 (function(){
-  const panelMap={dashboard:'dashboardPanel',users:'usersPanel',reports:'reportsPanel',analytics:'analyticsPanel',appeals:'appealsPanel',autobans:'autobansPanel',devicebans:'devicebansPanel',filters:'filtersPanel',alts:'altsPanel',search:'searchPanel',archive:'archivePanel',staff:'staffPanel',requests:'requestsPanel',scheduler:'schedulerPanel',health:'healthPanel',games:'gamesPanel',chat:'chatPanel',announcements:'announcementsPanel',logs:'logsPanel',devtools:'devPanel',database:'databasePanel'};
+  const panelMap={dashboard:'dashboardPanel',users:'usersPanel',reports:'reportsPanel',analytics:'analyticsPanel',appeals:'appealsPanel',autobans:'autobansPanel',devicebans:'devicebansPanel',filters:'filtersPanel',alts:'altsPanel',search:'searchPanel',archive:'archivePanel',staff:'staffPanel',requests:'requestsPanel',scheduler:'schedulerPanel',health:'healthPanel',games:'gamesPanel',media:'mediaPanel',chat:'chatPanel',announcements:'announcementsPanel',logs:'logsPanel',devtools:'devPanel',database:'databasePanel'};
   function activeId(){const id=(new URLSearchParams(location.search).get('id')||'dashboard').toLowerCase();return panelMap[id]?id:'dashboard'}
   function showAdminTab(){
     const id=activeId();

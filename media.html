@@ -1,0 +1,30 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Media Player - GameHub</title>
+<link rel="stylesheet" href="ui.css">
+<script src="auth.js"></script><script src="login-guard.js"></script><script src="shell.js"></script></head><body>
+<main class="page">
+  <section class="hero"><div><a class="btn" href="tv.html">← Movies & TV</a><h1 id="mediaTitle">Loading...</h1><p class="muted" id="mediaDesc">Media player</p></div></section>
+  <section class="card card-pad media-player-wrap">
+    <div class="button-row"><a class="btn" id="openExternal" href="#" target="_blank" rel="noopener">Open externally</a><a class="btn" id="backToEpisodes" href="tv.html">Back</a></div>
+    <iframe id="mediaFrame" class="media-frame" allowfullscreen allow="fullscreen; autoplay; encrypted-media; picture-in-picture"></iframe>
+    <p class="muted" id="mediaStatus">loading...</p>
+  </section>
+</main>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const qs=new URLSearchParams(location.search),id=qs.get('id')||'',seasonNum=qs.get('season'),episodeNum=qs.get('episode');
+let db=null,item=null;
+function findEpisode(show){const seasons=Array.isArray(show.seasons)?show.seasons:[];const season=seasons.find(s=>String(s.season)===String(seasonNum))||seasons[Number(seasonNum)-1]||seasons[0];const eps=Array.isArray(season?.episodes)?season.episodes:[];const ep=eps.find(e=>String(e.episode)===String(episodeNum))||eps[Number(episodeNum)-1]||eps[0];return {season,ep};}
+function render(){
+  if(!item){mediaTitle.textContent='Media not found';mediaStatus.textContent='This movie or episode does not exist.';mediaFrame.style.display='none';return}
+  const isTv=(item.contentType||item.type)==='tv';
+  let title=item.title||item.id,url=item.url||item.embedUrl||item.sourceUrl||'',desc=item.description||'',back='tv.html';
+  if(isTv){const found=findEpisode(item);const ep=found.ep||{};title=(item.title||'TV Show')+' · '+(found.season?.title||('Season '+(seasonNum||'')))+' · '+(ep.title||('Episode '+(episodeNum||'')));url=ep.url||ep.embedUrl||ep.sourceUrl||'';desc=ep.description||item.description||'';back='episodes.html?id='+encodeURIComponent(item.id);}
+  mediaTitle.textContent=title;mediaDesc.textContent=desc;backToEpisodes.href=back;openExternal.href=url||'#';
+  if(!url){mediaFrame.style.display='none';mediaStatus.textContent='No link set for this media yet.';return}
+  const mode=item.openMode||'embed';
+  mediaStatus.textContent=mode==='embed'?'Playing in iframe.':'This item is set to open externally.';
+  if(mode==='redirect'){mediaFrame.style.display='none';openExternal.textContent='Open media';}else{mediaFrame.style.display='block';mediaFrame.src=url;}
+}
+document.addEventListener('fg-auth-ready',async()=>{await FGAuth.initFirebase();db=FGAuth.db();db.ref('homepageAdmin/media/'+id).on('value',s=>{item=s.val()||null;render()});});
+</script></body></html>

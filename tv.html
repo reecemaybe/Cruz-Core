@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Movies & TV - GameHub</title>
+<link rel="stylesheet" href="ui.css">
+<script src="auth.js"></script><script src="login-guard.js"></script><script src="shell.js"></script></head><body>
+<main class="page">
+  <section class="hero"><div><h1>Movies & TV</h1><p class="muted">Movies and TV are separate from games.</p></div></section>
+  <section class="card card-pad">
+    <div class="section-head"><div><h2>Library</h2><p class="muted" id="mediaCount">loading...</p></div><input id="mediaSearch" class="search" placeholder="Search movies and shows..."></div>
+    <div class="media-grid" id="mediaGrid"><p class="muted">loading media...</p></div>
+  </section>
+</main>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+let db=null,media={},q='';
+function poster(item){const img=item.thumbnailUrl||item.posterUrl||item.thumb||'';return img?`<img class="media-poster" src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:`<div class="media-poster">${(item.contentType||item.type)==='tv'?'📺':'🎬'}</div>`}
+function render(){
+  const arr=Object.values(media||{}).filter(x=>x&&x.id&&!x.hidden).filter(x=>[x.title,x.description,x.tag,x.contentType].join(' ').toLowerCase().includes(q.toLowerCase())).sort((a,b)=>(Number(a.order||0)-Number(b.order||0))||String(a.title||a.id).localeCompare(String(b.title||b.id)));
+  mediaCount.textContent=arr.length+' items';
+  mediaGrid.innerHTML=arr.map(item=>{
+    const isTv=(item.contentType||item.type)==='tv';
+    const href=isTv?`episodes.html?id=${encodeURIComponent(item.id)}`:`media.html?id=${encodeURIComponent(item.id)}`;
+    const seasonCount=Array.isArray(item.seasons)?item.seasons.length:0;
+    const epCount=Array.isArray(item.seasons)?item.seasons.reduce((n,s)=>n+(Array.isArray(s.episodes)?s.episodes.length:0),0):0;
+    return `<a class="media-card" href="${href}">${poster(item)}<div><b>${esc(item.title||item.id)}</b><p class="muted">${esc(item.description||'')}</p></div><div class="media-meta"><span class="media-pill">${isTv?'TV Show':'Movie'}</span>${isTv?`<span class="media-pill">${seasonCount} seasons</span><span class="media-pill">${epCount} episodes</span>`:''}<span class="media-pill">${esc(item.openMode||'embed')}</span></div></a>`;
+  }).join('')||'<p class="muted">No movies or TV shows yet.</p>';
+}
+document.addEventListener('fg-auth-ready',async()=>{await FGAuth.initFirebase();db=FGAuth.db();db.ref('homepageAdmin/media').on('value',s=>{media=s.val()||{};render()});});
+mediaSearch.oninput=e=>{q=e.target.value||'';render()};
+</script></body></html>

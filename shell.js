@@ -2,7 +2,7 @@
   const rankPower={banned:-1,member:0,bot:0,helper:1,mod:2,admin:3,tester:4,owner:5};
   const roleEmoji={owner:'👑',tester:'🧪',admin:'🛡️',mod:'🔨',helper:'✨',bot:'🤖',banned:'🚫',member:''};
   const page=(location.pathname.split('/').pop()||'index.html').toLowerCase();
-  const nav=[['index.html','🏠','Home'],['games.html','🎮','Games'],['chatbox.html','💬','Chat'],['messages.html','✉️','Messages'],['users.html','👥','Users'],['profile.html','👤','Profile']];
+  const nav=[['index.html','🏠','Home'],['games.html','🎮','Games'],['tv.html','🎬','Movies & TV'],['chatbox.html','💬','Chat'],['messages.html','✉️','Messages'],['users.html','👥','Users'],['profile.html','👤','Profile']];
   function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
   function pfp(u){return (window.FGAuth?.pickPhoto?.(u))||String(u?.photoURL||u?.pfp||u?.pfpUrl||u?.profilePic||u?.profilePicture||u?.profileImage||u?.avatar||u?.avatarUrl||u?.picture||u?.photo||u?.image||u?.icon||'').trim();}
   function nameOf(u){return u?.name||u?.displayName||u?.username||'player';}
